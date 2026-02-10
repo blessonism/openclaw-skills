@@ -1,0 +1,23 @@
+# Secrets
+.env
+*.env.local
+
+# Cache
+mineru-cache/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime data
+dependency-tracker/data/check-results.json
+dependency-tracker/data/manifest.json
+dependency-tracker/data/reports/
+
+# Dev docs
+PLAN.md
