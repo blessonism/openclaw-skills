@@ -22,6 +22,14 @@ description: Robust URL-to-Markdown extraction for OpenClaw workflows. Use when 
 - 白名单文件：`references/domain-whitelist.md`
 - 对命中白名单的 URL：强制 `model_version=MinerU-HTML`
 
+0.5) **GitHub Fast Path（跳过 probe 和 MinerU）**：若 URL 匹配 `github.com/{owner}/{repo}` 模式，直接走 GitHub API
+
+- GitHub repo 页面是 SPA（客户端渲染），web_fetch 只能拿到导航栏壳子
+- 用 GitHub API 获取 README、repo 元数据、文件树、Issues 等
+- 详见 `references/heuristics.md` 中的 GitHub fast path 章节
+- Auth: `Authorization: token {GITHUB_PAT}`（见 TOOLS.md）
+- 返回结果仍遵循统一 Result Contract（`engine: "github-api"`）
+
 1) **Probe（低成本）**：优先用 `web_fetch(url)`
 
 - 目标：拿到正文 markdown（便宜、快）
@@ -59,7 +67,7 @@ description: Robust URL-to-Markdown extraction for OpenClaw workflows. Use when 
 }
 ```
 
-> 注意：`engine` 可能是 `web_fetch` 或 `mineru`。
+> 注意：`engine` 可能是 `web_fetch`、`mineru` 或 `github-api`。
 
 ## MinerU 调用（给 agent 的确定性脚本）
 
