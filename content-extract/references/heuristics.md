@@ -1,6 +1,6 @@
 # Extraction heuristics (probe → fallback)
 
-This file defines **when to accept web_fetch output** vs **when to fallback to MinerU**.
+This file defines **when to accept web_fetch output** vs **when to fallback to MinerU** vs **when to use a specialized API**.
 
 ## Accept web_fetch when
 
@@ -8,11 +8,32 @@ This file defines **when to accept web_fetch output** vs **when to fallback to M
 - Content length is not trivially small (rule of thumb: > 2k chars for articles; adjust by site).
 - Does NOT look like a captcha/interstitial page.
 
+## GitHub fast path (skip probe AND MinerU)
+
+If URL matches `github.com/{owner}/{repo}` pattern, **do NOT use web_fetch or MinerU**. GitHub repo pages are SPA (client-side rendered); web_fetch only gets the nav shell.
+
+Instead, use GitHub API directly:
+
+| Content | API Endpoint | Notes |
+|---------|-------------|-------|
+| README | `GET /repos/{owner}/{repo}/readme` with `Accept: application/vnd.github.v3.raw` | Returns raw markdown |
+| Repo metadata | `GET /repos/{owner}/{repo}` | Stars, forks, license, description, etc. |
+| File tree | `GET /repos/{owner}/{repo}/git/trees/{branch}?recursive=1` | Full file listing |
+| File content | `GET /repos/{owner}/{repo}/contents/{path}` with `Accept: application/vnd.github.v3.raw` | Any specific file |
+| Issues | `GET /repos/{owner}/{repo}/issues?state=all&sort=comments&per_page=10` | Top issues by engagement |
+| Commits | `GET /repos/{owner}/{repo}/commits?per_page=10` | Recent activity |
+
+Auth header: `Authorization: token {GITHUB_PAT}` (see TOOLS.md)
+
+Detection regex: `^https?://github\.com/([^/]+)/([^/]+)(/.*)?$`
+
+This also applies to subpages like `github.com/{owner}/{repo}/issues`, `github.com/{owner}/{repo}/blob/...`, etc. — always prefer API over web_fetch for github.com.
+
 ## Force fallback to MinerU (MinerU-HTML) when
 
 ### Domain whitelist (skip probe)
 
-If URL host matches the whitelist in `domain-whitelist.md`, **skip probe** and go straight to MinerU.
+If URL host matches the whitelist in `domain-whitelist.md` (excluding GitHub, which has its own fast path), **skip probe** and go straight to MinerU.
 
 See: `references/domain-whitelist.md`
 
