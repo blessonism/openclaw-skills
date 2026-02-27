@@ -8,7 +8,7 @@
 
 | Skill | 干什么 | 依赖 |
 |-------|--------|------|
-| **[search-layer](./search-layer/)** | 多源搜索引擎。Brave + Exa + Tavily 三源并行，意图感知评分，自动去重排序 | `requests` + API Keys |
+| **[search-layer](./search-layer/)** | 多源搜索引擎（v3.0）。Brave + Exa + Tavily + Grok 四源并行，意图感知评分，链式引用追踪 | `requests` + `trafilatura` + `beautifulsoup4` + API Keys |
 | **[content-extract](./content-extract/)** | URL → 干净 Markdown。反爬站点（微信、知乎）自动降级到 MinerU | mineru-extract（可选） |
 | **[mineru-extract](./mineru-extract/)** | [MinerU](https://mineru.net) API 封装。PDF/Office/HTML → Markdown | `requests` + MinerU Token |
 | **[github-explorer](./github-explorer/)** | GitHub 项目深度分析。多源采集 + 结构化研判报告 | search-layer, content-extract |
@@ -17,16 +17,16 @@
 
 ## 它们之间的关系
 
-```
+\`\`\`
 github-explorer（项目分析）
-├── search-layer ──── 三源并行搜索 + 意图评分
+├── search-layer ──── 四源并行搜索 + 意图评分 + 链式追踪
 ├── content-extract ── 智能 URL → Markdown
 │   └── mineru-extract ── MinerU API（反爬兜底）
 └── OpenClaw 内置 ── web_search, web_fetch, browser
 
 dependency-tracker（依赖检查）── 独立运行
 gitclaw-backup（备份）── 独立运行
-```
+\`\`\`
 
 ## 安装
 
@@ -40,7 +40,7 @@ OpenClaw 会自动 clone 并链接所有 skill。
 
 ### 方式二：手动安装（全部）
 
-```bash
+\`\`\`bash
 # 1. Clone
 mkdir -p ~/.openclaw/workspace/_repos
 git clone https://github.com/blessonism/openclaw-skills.git \
@@ -51,11 +51,11 @@ cd ~/.openclaw/workspace/skills
 for skill in search-layer content-extract mineru-extract github-explorer dependency-tracker gitclaw-backup; do
   ln -s ~/.openclaw/workspace/_repos/openclaw-skills/$skill $skill
 done
-```
+\`\`\`
 
 ### 方式三：只装你需要的
 
-```bash
+\`\`\`bash
 # Clone 一次
 mkdir -p ~/.openclaw/workspace/_repos
 git clone https://github.com/blessonism/openclaw-skills.git \
@@ -65,59 +65,71 @@ git clone https://github.com/blessonism/openclaw-skills.git \
 cd ~/.openclaw/workspace/skills
 ln -s ~/.openclaw/workspace/_repos/openclaw-skills/search-layer search-layer
 ln -s ~/.openclaw/workspace/_repos/openclaw-skills/content-extract content-extract
-```
+\`\`\`
 
-> 💡 skills 目录因安装方式不同可能不同，常见的是 `~/.openclaw/workspace/skills/` 或 `~/.openclaw/skills/`。
+> 💡 skills 目录因安装方式不同可能不同，常见的是 \`~/.openclaw/workspace/skills/\` 或 \`~/.openclaw/skills/\`。
 
 ## 配置
 
 ### 搜索 API Keys（search-layer 需要）
 
-在 OpenClaw workspace 根目录的 `TOOLS.md` 中添加：
+创建 \`~/.openclaw/credentials/search.json\`：
 
-```markdown
-### Search
-- **Brave**: `your-brave-key`
-- **Exa**: `your-exa-key`
-- **Tavily**: `your-tavily-key`
-```
+\`\`\`json
+{
+  "exa": "your-exa-key",
+  "tavily": "your-tavily-key",
+  "grok": {
+    "apiUrl": "https://api.x.ai/v1",
+    "apiKey": "your-grok-key",
+    "model": "grok-4.1-fast"
+  }
+}
+\`\`\`
 
-或设置环境变量：
+> 💡 Grok 配置可选，缺失时自动降级为 Exa + Tavily 双源。Brave 由 OpenClaw 内置的 \`web_search\` 管理，无需在此配置。
 
-```bash
-export EXA_API_KEY="your-exa-key"        # https://exa.ai
-export TAVILY_API_KEY="your-tavily-key"  # https://tavily.com
-```
+也支持环境变量方式（会覆盖 credentials 文件）：
 
-Brave 由 OpenClaw 内置的 `web_search` 使用，在 OpenClaw 配置中设置。
+\`\`\`bash
+export EXA_API_KEY="your-exa-key"
+export TAVILY_API_KEY="your-tavily-key"
+export GROK_API_URL="https://api.x.ai/v1"  # 可选
+export GROK_API_KEY="your-grok-key"        # 可选
+\`\`\`
 
 ### MinerU Token（可选）
 
 抓取微信/知乎/小红书等反爬站点时需要：
 
-```bash
+\`\`\`bash
 cp mineru-extract/.env.example mineru-extract/.env
 # 编辑 .env，填入 MinerU token（https://mineru.net/apiManage）
-```
+\`\`\`
 
 ### Python 依赖
 
-```bash
-pip install requests  # 唯一的外部依赖
-```
+\`\`\`bash
+# 基础依赖
+pip install requests
+
+# search-layer v3.0 链式追踪新增依赖
+pip install trafilatura beautifulsoup4 lxml
+\`\`\`
 
 ## 各 Skill 详情
 
-每个 skill 目录下都有 `SKILL.md`，包含完整的使用说明和配置指南。点击上方表格中的链接查看。
+每个 skill 目录下都有 \`SKILL.md\`，包含完整的使用说明和配置指南。
 
-### search-layer 亮点
+### search-layer v3.0 亮点
 
 - **意图感知**：7 种查询意图（factual / status / comparison / tutorial / exploratory / news / resource），自动调整搜索策略
-- **三源并行**：Brave + Exa + Tavily，任一源故障自动降级
-- **意图评分**：`score = w_keyword × keyword + w_freshness × freshness + w_authority × authority`
-- **域名权威性**：内置四级评分表（60+ 域名）
-- **多查询并行**：`--queries "q1" "q2" "q3"` 同时执行
-- **完全向后兼容**：不带新参数时行为与 v1 一致
+- **四源并行**：Brave + Exa + Tavily + Grok，任一源故障自动降级
+- **意图评分**：\`score = w_keyword × keyword + w_freshness × freshness + w_authority × authority\`
+- **链式追踪（v3.0 新增）**：\`fetch_thread.py\` 结构化深抓 GitHub/HN/Reddit/V2EX/网页，\`chain_tracker.py\` BFS 引用图遍历，\`relevance_gate.py\` 相关性剪枝
+- **Thread Pulling（v3.0 新增）**：\`--extract-refs\` 搜索后自动提取结果 URL 的引用图，并行 fetch
+- **多查询并行**：\`--queries "q1" "q2" "q3"\` 同时执行
+- **完全向后兼容**：不带新参数时行为与 v2.x 一致
 
 ### github-explorer 亮点
 
@@ -132,7 +144,8 @@ pip install requests  # 唯一的外部依赖
 
 - [OpenClaw](https://github.com/openclaw/openclaw)（agent 运行时）
 - Python 3.10+
-- `requests`（pip install）
+- \`requests\`（基础依赖）
+- \`trafilatura\`、\`beautifulsoup4\`、\`lxml\`（search-layer v3.0 链式追踪依赖）
 - API Keys：按需配置（见上方配置章节）
 
 ## 历史仓库
