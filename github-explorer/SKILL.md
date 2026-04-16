@@ -1,10 +1,6 @@
 ---
 name: github-explorer
-description: >
-  Deep-dive analysis of GitHub projects. Use when the user mentions a GitHub repo/project name
-  and wants to understand it — triggered by phrases like "帮我看看这个项目", "了解一下 XXX",
-  "这个项目怎么样", "分析一下 repo", or any request to explore/evaluate a GitHub project.
-  Covers architecture, community health, competitive landscape, and cross-platform knowledge sources.
+description: "Deep-dive analysis of GitHub projects. Use when the user mentions a GitHub repo/project name and wants to understand it — triggered by phrases like '帮我看看这个项目', '了解一下 XXX', '这个项目怎么样', '分析一下 repo', or any request to explore/evaluate a GitHub project. Covers architecture, community health, competitive landscape, and cross-platform knowledge sources."
 ---
 
 # GitHub Explorer — 项目深度分析
@@ -43,27 +39,33 @@ PAT 见 TOOLS.md。
 
 | 来源 | URL 模式 | 采集内容 | 建议工具 |
 |---|---|---|---|
-| GitHub Repo | `github.com/{org}/{repo}` | README、About、Contributors | `web_fetch` |
-| GitHub Issues | `github.com/{org}/{repo}/issues?q=sort:comments` | Top 3-5 高质量 Issue | `browser` |
+| GitHub Repo | `github.com/{org}/{repo}` | README、About、Contributors | GitHub API（见上方） |
+| GitHub Issues | `github.com/{org}/{repo}/issues?q=sort:comments` | Top 3-5 高质量 Issue | GitHub API |
 | 中文社区 | 微信/知乎/小红书 | 深度评测、使用经验 | `content-extract` |
 | 技术博客 | Medium/Dev.to | 技术架构分析 | `web_fetch` / `content-extract` |
 | 讨论区 | V2EX/Reddit | 用户反馈、槽点 | `search-layer`（Deep 模式） |
 
 #### search-layer 调用规范
 
-search-layer v2 支持意图感知评分。github-explorer 场景下的推荐用法：
+github-explorer 场景下的推荐调用模式（详见 search-layer SKILL.md）：
 
-| 场景 | 命令 | 说明 |
-|------|------|------|
-| **项目调研（默认）** | `python3 skills/search-layer/scripts/search.py --queries "<project> review" "<project> 评测" --mode deep --intent exploratory --num 5` | 多查询并行，按权威性排序 |
-| **最新动态** | `python3 skills/search-layer/scripts/search.py "<project> latest release" --mode deep --intent status --freshness pw --num 5` | 优先新鲜度，过滤一周内 |
-| **竞品对比** | `python3 skills/search-layer/scripts/search.py --queries "<project> vs <competitor>" "<project> alternatives" --mode deep --intent comparison --num 5` | 对比意图，关键词+权威双权重 |
-| **快速查链接** | `python3 skills/search-layer/scripts/search.py "<project> official docs" --mode fast --intent resource --num 3` | 精确匹配，最快 |
-| **社区讨论** | `python3 skills/search-layer/scripts/search.py "<project> discussion experience" --mode deep --intent exploratory --domain-boost reddit.com,news.ycombinator.com --num 5` | 加权社区站点 |
+```bash
+# 项目调研（默认）— 多查询并行，按权威性排序
+python3 skills/search-layer/scripts/search.py \
+  --queries "<project> review" "<project> 评测" \
+  --mode deep --intent exploratory --num 5
 
-**意图类型速查**：`factual`(事实) / `status`(动态) / `comparison`(对比) / `tutorial`(教程) / `exploratory`(探索) / `news`(新闻) / `resource`(资源定位)
+# 竞品对比
+python3 skills/search-layer/scripts/search.py \
+  --queries "<project> vs <competitor>" "<project> alternatives" \
+  --mode deep --intent comparison --num 5
 
-> 不带 `--intent` 时行为与 v1 完全一致（无评分，按原始顺序输出）。
+# 社区讨论 — 加权社区站点
+python3 skills/search-layer/scripts/search.py \
+  "<project> discussion experience" \
+  --mode deep --intent exploratory \
+  --domain-boost reddit.com,news.ycombinator.com --num 5
+```
 
 降级规则：Exa/Tavily 任一 429/5xx → 继续用剩余源；脚本整体失败 → 退回 `web_search` 单源。
 
@@ -187,9 +189,9 @@ content-extract 内部会：
 
 ## Execution Notes
 
-- 优先使用 `web_search` + `web_fetch`，browser 作为备选
-- **搜索增强**：项目调研类任务默认使用 `search-layer` v2 Deep 模式 + `--intent exploratory`（Brave + Exa + Tavily 三源并行去重 + 意图感知评分），单源失败不阻塞主流程
-- **抓取降级（强制）**：当 `web_fetch` 失败/403/反爬页/正文过短，或来源域名属于高风险站点（如微信/知乎/小红书）时：改用 `content-extract`（其内部会 fallback 到 MinerU-HTML），拿到更干净的 Markdown + 可追溯 sources
+- 优先使用 GitHub API（repo 页面）+ `web_fetch`（非 GitHub 页面），browser 作为备选
+- **搜索增强**：默认使用 `search-layer` Deep 模式 + `--intent exploratory`，单源失败不阻塞主流程
+- **抓取降级**：见上方"抓取降级与增强协议"——web_fetch 失败/反爬时自动升级为 `content-extract`
 - 并行采集不同来源以提高效率
 - 所有链接必须真实可访问，不要编造 URL
 - 中文输出，技术术语保留英文

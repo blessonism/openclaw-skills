@@ -7,14 +7,12 @@ description: Use the official MinerU (mineru.net) parsing API to convert a URL (
 
 Use MinerU as an upstream “content normalizer”: submit a URL to MinerU, poll for completion, download the result zip, and extract the main Markdown.
 
-## Quick start (MCP-aligned)
+## Quick Start
 
-We align to the **MinerU MCP** mental model, but we do **not** run an MCP server.
-
-- Primary script (MCP-style): `scripts/mineru_parse_documents.py`
-  - Input: `--file-sources` (comma/newline-separated)
-  - Output: **JSON contract** on stdout: `{ ok, items, errors }`
-- Low-level script (single URL): `scripts/mineru_extract.py`
+- **Primary script**: `scripts/mineru_parse_documents.py`
+  - Input: `--file-sources` (comma/newline-separated URLs)
+  - Output: JSON on stdout: `{ ok, items, errors }`
+- **Low-level script** (single URL): `scripts/mineru_extract.py`
 
 Auth:
 - Set `MINERU_TOKEN` (Bearer token from mineru.net)
@@ -35,7 +33,7 @@ MINERU_API_BASE=https://mineru.net
 
 ### 2) Parse URL(s) → Markdown (recommended)
 
-MCP-style wrapper (returns JSON, optionally includes markdown text):
+Primary wrapper (returns JSON, optionally includes markdown text):
 
 ```bash
 python3 skills/mineru-extract/scripts/mineru_parse_documents.py \
@@ -83,10 +81,18 @@ It prints a JSON summary to **stderr** with paths:
 - `--page-ranges "2,4-6"` (non-HTML)
 - `--timeout 600` / `--poll-interval 2`
 
-## Failure modes & fallbacks
+## Validation
+
+After parsing, verify the result before using it downstream:
+
+1. Check the JSON output has `”ok”: true` — if false, read `errors` for the failure reason
+2. Verify `markdown_path` exists and is non-empty: `[[ -s “$markdown_path” ]]`
+3. For multi-URL batches, check each item in `items` individually — partial failures are possible
+
+## Failure Modes & Fallbacks
 
 - MinerU may fail to fetch some URLs (anti-bot / geo / login).
-  - Fallback: provide an HTML file or a PDF/long screenshot; then implement “upload + parse” flow with MinerU batch upload endpoints.
+  - Fallback: provide an HTML file or a PDF/long screenshot; then use MinerU batch upload endpoints.
   - Always report the failing URL + MinerU `err_msg` and keep an original-source link in outputs.
 
 ## References

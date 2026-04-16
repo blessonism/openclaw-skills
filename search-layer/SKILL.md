@@ -1,13 +1,6 @@
 ---
 name: search-layer
-description: >
-  DEFAULT search tool for ALL search/lookup needs. Multi-source search and deduplication
-  layer with intent-aware scoring. Integrates Brave Search (web_search), Exa, Tavily,
-  and Grok to provide high-coverage, high-quality results. Automatically classifies
-  query intent and adjusts search strategy, scoring weights, and result synthesis.
-  Use for ANY query that requires web search — factual lookups, research, news,
-  comparisons, resource finding, "what is X", status checks, etc. Do NOT use raw
-  web_search directly; always route through this skill.
+description: "DEFAULT search tool for ALL search/lookup needs. Multi-source search and deduplication layer with intent-aware scoring. Integrates Brave Search (web_search), Exa, Tavily, and Grok to provide high-coverage, high-quality results. Automatically classifies query intent and adjusts search strategy, scoring weights, and result synthesis. Use for ANY query that requires web search — factual lookups, research, news, comparisons, resource finding, 'what is X', status checks, etc. Do NOT use raw web_search directly; always route through this skill."
 ---
 
 # Search Layer v2.2 — 意图感知多源检索协议
@@ -274,14 +267,6 @@ search.py "query" --mode deep --intent tutorial --domain-boost dev.to,freecodeca
 - Grok 超时/错误 → 继续 Brave + Exa + Tavily
 - search.py 整体失败 → 仅用 Brave `web_search`（始终可用）
 - **永远不要因为某个源失败而阻塞主流程**
-
----
-
-## 向后兼容
-
-不带 `--intent` 参数时，search.py 行为与 v1 完全一致（无评分，按原始顺序输出）。
-
-现有调用方（如 github-explorer）无需修改。
 
 ---
 

@@ -3,15 +3,15 @@ name: content-extract
 description: Robust URL-to-Markdown extraction for OpenClaw workflows. Use when the user wants to "extract/summarize/convert a webpage to markdown" (especially WeChat mp.weixin.qq.com) and web_fetch/browser is blocked or messy. Uses a cheap probe via web_fetch first, then falls back to the official MinerU API (via the local mineru-extract skill) and returns a traceable result contract with source links.
 ---
 
-# content-extract — 上层内容解析入口（MCP 语义对齐，但不跑 MCP Server）
+# content-extract — 统一内容解析入口
 
-目标：把“给我一个 URL → 产出可读 Markdown + 可追溯入口”变成一个**统一入口**，供后续所有业务 skill（github-explorer、写作类 skills、日报等）复用。
+统一入口：URL → 可读 Markdown + 可追溯来源，供 github-explorer、写作类 skills、日报等复用。
 
-核心原则（来自你发的 Excel Skill 拆解文章的启发）：
+核心原则：
 
-- **行为规约层**：永远给出可追溯入口（原文 URL + 解析产物路径/链接），绝不编造来源。
-- **Token 探针**：先用低成本 probe 判断可不可以直接抓；不行再走重解析（MinerU）。
-- **反弹机制**：失败时返回“下一步动作建议”，而不是一堆异常栈。
+- **可追溯**：永远给出原文 URL + 解析产物路径/链接，绝不编造来源。
+- **低成本优先**：先用 web_fetch probe 判断可不可以直接抓；不行再走 MinerU 重解析。
+- **优雅降级**：失败时返回”下一步动作建议”，而不是异常栈。
 
 ## 工作流（Decision Tree）
 
@@ -85,11 +85,6 @@ python3 /home/node/.openclaw/workspace/skills/mineru-extract/scripts/mineru_pars
 - 输出必须包含 `sources`（原文入口 + 解析产物入口）。
 - 如果 MinerU 成功：必须把 `markdown_path`（本地路径）写进 `sources`，方便复查。
 - 如果两条链路都失败：必须明确失败原因，并给出下一步（例如：让 Boss 提供可访问镜像链接 / 允许我用浏览器 relay 导出 HTML / 走上传 HTML 文件解析的兜底方案）。
-
-## 本 skill 自身不做什么
-
-- 不跑 MCP Server（避免常驻服务与运维负担）
-- 不试图绕过登录/验证码（这属于访问层问题；我们只做解析层和工作流路由）
 
 ## References
 
