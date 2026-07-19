@@ -107,7 +107,7 @@ def generate_report():
             if source_type == "clawhub":
                 slug = r.get("slug") or source.get("slug") or name
                 owner = r.get("owner") or source.get("owner")
-                lines.append(f"- **来源**: ClawHub — [{owner}/{slug}](https://clawhub.ai/skills/{slug})")
+                lines.append(f"- **来源**: ClawHub - [{owner}/{slug}](https://clawhub.ai/skills/{slug})")
                 lines.append(f"- **版本变化**: `{r.get('localVersion', '?')}` → `{r.get('remoteVersion', '?')}`")
                 if r.get("changelog"):
                     lines.append(f"- **Changelog**:")
@@ -116,8 +116,9 @@ def generate_report():
                     lines.append(f"  ```")
             else:
                 repo = source.get("repo", "")
-                repo_url = (source.get("repoUrl", "") or "").rstrip(".git")
-                lines.append(f"- **来源**: GitHub — [{repo}]({repo_url})" if repo_url else f"- **来源**: {repo}")
+                repo_url = source.get("repoUrl", "") or ""
+                repo_url = repo_url.removesuffix(".git")
+                lines.append(f"- **来源**: GitHub - [{repo}]({repo_url})" if repo_url else f"- **来源**: {repo}")
                 lines.append(f"- **Hash 变化**: `{r.get('localHash', '?')}` → `{r.get('remoteHash', '?')}`")
 
                 # Diff summary
@@ -202,13 +203,13 @@ def generate_report():
 
         lines.append("## 📦 内置 / 本地 Skills")
         lines.append("")
-        lines.append(f"- **内置 (bundled)**: {bundled_count} 个 — 随 OpenClaw 版本更新")
+        lines.append(f"- **内置 (bundled)**: {bundled_count} 个 - 随 OpenClaw 版本更新")
         if local_items:
             lines.append(f"- **本地 (workspace)**: {len(local_items)} 个")
             for name, r in local_items:
                 note = r.get("note", "")
                 if note and note != "Self-managed via git":
-                    lines.append(f"  - `{name}` — {note}")
+                    lines.append(f"  - `{name}` - {note}")
                 else:
                     lines.append(f"  - `{name}`")
         lines.append("")
@@ -216,7 +217,7 @@ def generate_report():
     # ── npm Dependencies ───────────────────────────────────────
     npm_app = results.get("npmApp", {})
     if npm_app.get("outdatedCount", 0) > 0:
-        lines.append(f"## npm 依赖 — {npm_app['outdatedCount']} 个可更新")
+        lines.append(f"## npm 依赖 - {npm_app['outdatedCount']} 个可更新")
         lines.append("")
 
         enriched = npm_app.get("enriched", [])
@@ -238,7 +239,7 @@ def generate_report():
     # ── pip Dependencies ───────────────────────────────────────
     pip_count = results.get("pipOutdated", {}).get("count", 0)
     if pip_count > 0:
-        lines.append(f"## pip 依赖 — {pip_count} 个可更新")
+        lines.append(f"## pip 依赖 - {pip_count} 个可更新")
         lines.append("")
         pip_pkgs = manifest.get("pipOutdated", {}).get("packages", [])
         if pip_pkgs:

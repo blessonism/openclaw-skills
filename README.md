@@ -12,6 +12,7 @@
 | **[content-extract](./content-extract/)** | URL → 干净 Markdown。反爬站点（微信、知乎）自动降级到 MinerU | mineru-extract（可选） |
 | **[mineru-extract](./mineru-extract/)** | [MinerU](https://mineru.net) API 封装。PDF/Office/HTML → Markdown | `requests` + MinerU Token |
 | **[github-explorer](./github-explorer/)** | GitHub 项目深度分析。多源采集 + 结构化研判报告 | search-layer, content-extract |
+| **[xquik-tweet-search](./xquik-tweet-search/)** | X/Twitter 公开帖子检索。按关键词、推文 URL、推文 ID、时间窗口和游标翻页查询 | Xquik API Key |
 | **[dependency-tracker](./dependency-tracker/)** | 依赖健康检查。扫描 skills/npm/pip/CLI 版本漂移，生成报告 | `requests` |
 | **[gitclaw-backup](./gitclaw-backup/)** | GitHub 备份。将 OpenClaw 工作区同步到 GitHub 仓库 | git |
 
@@ -24,6 +25,7 @@ github-explorer（项目分析）
 │   └── mineru-extract ── MinerU API（反爬兜底）
 └── OpenClaw 内置 ── web_search, web_fetch, browser
 
+xquik-tweet-search（X/Twitter 检索）── 独立运行
 dependency-tracker（依赖检查）── 独立运行
 gitclaw-backup（备份）── 独立运行
 ```
@@ -46,10 +48,11 @@ mkdir -p ~/.openclaw/workspace/_repos
 git clone https://github.com/blessonism/openclaw-skills.git \
   ~/.openclaw/workspace/_repos/openclaw-skills
 
-# 2. 链接所有 skill
+# 2. 链接所有 skill（可安全重复运行）
+mkdir -p ~/.openclaw/workspace/skills
 cd ~/.openclaw/workspace/skills
-for skill in search-layer content-extract mineru-extract github-explorer dependency-tracker gitclaw-backup; do
-  ln -s ~/.openclaw/workspace/_repos/openclaw-skills/$skill $skill
+for skill in search-layer content-extract mineru-extract github-explorer xquik-tweet-search dependency-tracker gitclaw-backup; do
+  ln -sfn ~/.openclaw/workspace/_repos/openclaw-skills/$skill $skill
 done
 ```
 
@@ -107,6 +110,16 @@ cp mineru-extract/.env.example mineru-extract/.env
 # 编辑 .env，填入 MinerU token（https://mineru.net/apiManage）
 ```
 
+### Xquik API Key（xquik-tweet-search 需要）
+
+用于查询 X/Twitter 公开帖子：
+
+```bash
+export XQUIK_API_KEY="your-xquik-api-key"
+```
+
+请求固定发送到受信任的 `https://xquik.com`。不要把 API Key 发送到自定义主机。
+
 ### Python 依赖
 
 ```bash
@@ -158,3 +171,5 @@ pip install trafilatura beautifulsoup4 lxml
 ## License
 
 MIT
+
+Xquik is an independent third-party service. Not affiliated with X Corp. "Twitter" and "X" are trademarks of X Corp.
