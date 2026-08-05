@@ -14,7 +14,7 @@
 | **[github-explorer](./github-explorer/)** | GitHub 项目深度分析。多源采集 + 结构化研判报告 | search-layer, content-extract |
 | **[dependency-tracker](./dependency-tracker/)** | 依赖健康检查。扫描 skills/npm/pip/CLI 版本漂移，生成报告 | `requests` |
 | **[gitclaw-backup](./gitclaw-backup/)** | GitHub 备份。将 OpenClaw 工作区同步到 GitHub 仓库 | git |
-| **[kesha-voice-kit](https://github.com/drakulavich/kesha-voice-kit)** | Local STT+TTS voice toolkit. Speech-to-text (25 languages, ~19x faster than Whisper on Apple Silicon via CoreML, ONNX fallback), text-to-speech (Kokoro + Vosk-TTS + 180 macOS system voices, SSML), VAD, language detection (107 langs). Rust engine. No cloud required. | Rust |
+| **[kesha-voice-kit](https://github.com/drakulavich/kesha-voice-kit)** | Local STT+TTS voice toolkit. Speech-to-text (25 languages, ~19x faster than Whisper on Apple Silicon via CoreML, ONNX fallback), text-to-speech (9 languages via Kokoro + Vosk-TTS + 180 macOS system voices, SSML), VAD, speaker diarization, language detection (107 langs). Rust engine. No cloud required. | Rust |
 
 ## 它们之间的关系
 
